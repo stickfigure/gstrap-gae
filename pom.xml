@@ -3,7 +3,7 @@
 
 	<groupId>com.voodoodyne.gstrap</groupId>
 	<artifactId>gstrap-gae-parent</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.1</version>
 	<packaging>pom</packaging>
 
 	<name>GStrap GAE</name>
@@ -30,7 +30,7 @@
     <scm>
         <url>scm:git:https://github.com/stickfigure/gstrap-gae</url>
         <developerConnection>scm:git:git@github.com:stickfigure/gstrap-gae</developerConnection>
-		<tag>HEAD</tag>
+		<tag>gstrap-gae-0.1</tag>
 	</scm>
 
 	<licenses>
