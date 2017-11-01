@@ -16,7 +16,7 @@
 
 	<properties>
 		<gstrap.version>0.35</gstrap.version>
-		<gae.version>1.9.50</gae.version>
+		<gae.version>1.9.59</gae.version>
 		<junit.jupiter.version>5.0.0</junit.jupiter.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
