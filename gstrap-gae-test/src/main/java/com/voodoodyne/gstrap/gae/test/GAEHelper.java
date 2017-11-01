@@ -57,14 +57,24 @@ public class GAEHelper {
 	}
 
 	/** */
-	private final LocalServiceTestHelper helper =
-			new LocalServiceTestHelper(
-					new LocalDatastoreServiceTestConfig().setApplyAllHighRepJobPolicy(),
-					new LocalTaskQueueTestConfig()
-							.setQueueXmlPath("src/main/webapp/WEB-INF/queue.xml")
-							.setDisableAutoTaskExecution(true)
-							.setCallbackClass(LoggingDeferredTaskCallback.class),
-					new LocalSearchServiceTestConfig());
+	private final LocalServiceTestHelper helper;
+
+	/** Assumes standard maven location of queue.xml */
+	public GAEHelper() {
+		this("src/main/webapp/WEB-INF/queue.xml");
+	}
+
+	/** */
+	public GAEHelper(final String queueXmlPath) {
+		helper =
+				new LocalServiceTestHelper(
+						new LocalDatastoreServiceTestConfig().setApplyAllHighRepJobPolicy(),
+						new LocalTaskQueueTestConfig()
+								.setQueueXmlPath(queueXmlPath)
+								.setDisableAutoTaskExecution(true)
+								.setCallbackClass(LoggingDeferredTaskCallback.class),
+						new LocalSearchServiceTestConfig());
+	}
 
 	/** */
 	public void setUp(TestInfo testInfo) {
