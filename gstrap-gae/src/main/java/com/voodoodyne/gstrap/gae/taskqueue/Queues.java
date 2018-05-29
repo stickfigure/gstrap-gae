@@ -1,6 +1,7 @@
 package com.voodoodyne.gstrap.gae.taskqueue;
 
 import com.google.appengine.api.taskqueue.QueueFactory;
+import com.voodoodyne.gstrap.taskqueue.SimpleQueueHelper;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,13 +15,13 @@ public class Queues
 {
 	/** 'default' is a java keyword */
 	public static QueueHelper deflt() {
-		return new SimpleQueueHelper(QueueFactory.getDefaultQueue());
+		return new QueueHelper(QueueFactory.getDefaultQueue());
 	}
 
 	/**
 	 */
 	public static QueueHelper named(final String queueName) {
-		return new SimpleQueueHelper(queueName);
+		return new QueueHelper(queueName);
 	}
 
 	/**
