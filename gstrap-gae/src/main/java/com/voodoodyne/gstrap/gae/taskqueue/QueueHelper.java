@@ -1,9 +1,12 @@
 package com.voodoodyne.gstrap.gae.taskqueue;
 
+import com.google.api.client.util.Objects;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.taskqueue.DeferredTask;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueConstants;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.api.taskqueue.TaskOptions.Builder;
 import com.google.appengine.api.taskqueue.TransientFailureException;
@@ -18,15 +21,44 @@ import java.util.UUID;
 /** Better interface to queues */
 @Data
 @Slf4j
-abstract public class QueueHelper {
+public class QueueHelper {
 
 	private static final String DISALLOWED_CHARS_IN_TASK_NAME_REGEX = "[^a-zA-Z0-9_-]";
+
+	private final Queue queue;
 
 	/** If not null, delay execution by this long */
 	private final Long countdownMillis;
 
+	/** If not null, limit retries. In theory, 0 means "try once" but need to verify. */
+	private final Integer retryLimit;
+
+	/** */
+	public QueueHelper(final String name) {
+		this(QueueFactory.getQueue(name));
+	}
+
+	/** */
+	public QueueHelper(final Queue queue) {
+		this(queue, null, null);
+	}
+
+	/** */
+	private QueueHelper(final Queue queue, final Long countdownMillis, final Integer retryLimit) {
+		this.queue = queue;
+		this.countdownMillis = countdownMillis;
+		this.retryLimit = retryLimit;
+	}
+
 	/** @return a new immutable QueueHelper with the countdown */
-	abstract public QueueHelper withCountdownMillis(final long millis);
+	public QueueHelper withCountdownMillis(final long countdownMillis) {
+		return new QueueHelper(queue, countdownMillis, retryLimit);
+	}
+
+	/** @return a new immutable QueueHelper with the limit */
+	public QueueHelper withRetryLimit(final int retryLimit) {
+		return new QueueHelper(queue, countdownMillis, retryLimit);
+	}
 
 	/** WITHOUT a transaction */
 	public void add(final DeferredTask payload) {
@@ -48,6 +80,10 @@ abstract public class QueueHelper {
 
 		if (countdownMillis != null) {
 			taskOptions = taskOptions.countdownMillis(countdownMillis);
+		}
+
+		if (retryLimit != null) {
+			taskOptions = taskOptions.retryOptions(RetryOptions.Builder.withTaskRetryLimit(retryLimit));
 		}
 
 		return taskOptions;
@@ -90,5 +126,16 @@ abstract public class QueueHelper {
 			queue().add(null, piece);
 	}
 
-	abstract public Queue queue();
+	public Queue queue() {
+		return queue;
+	}
+
+	@Override
+	public String toString() {
+		return Objects.toStringHelper(this)
+				.add("queue", queue.getQueueName())
+				.add("countdownMillis", countdownMillis)
+				.add("retryLimit", retryLimit)
+				.toString();
+	}
 }
