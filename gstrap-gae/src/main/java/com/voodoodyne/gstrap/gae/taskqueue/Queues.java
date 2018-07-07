@@ -1,7 +1,7 @@
 package com.voodoodyne.gstrap.gae.taskqueue;
 
 import com.google.appengine.api.taskqueue.QueueFactory;
-import com.voodoodyne.gstrap.taskqueue.SimpleQueueHelper;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.List;
@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 /**
  * Utilitiy method for dealing with queues
  */
+@Slf4j
 public class Queues
 {
 	/** 'default' is a java keyword */
@@ -28,6 +29,8 @@ public class Queues
 	 * Add the tasks to their default queues in the most optimum way possible.
 	 */
 	public static <T extends GuicyDeferredTask> void add(final Collection<T> tasks) {
+		log.debug("Enqueueing {} tasks", tasks.size());
+
 		final Map<QueueHelper, List<T>> byQueue = tasks.stream().collect(Collectors.groupingBy(GuicyDeferredTask::defaultQueue));
 
 		byQueue.forEach(QueueHelper::add);
