@@ -122,8 +122,12 @@ public class QueueHelper {
 
 		final Iterable<List<TaskOptions>> partitioned = Iterables.partition(opts, QueueConstants.maxTasksPerAdd());
 
-		for (final List<TaskOptions> piece: partitioned)
+		for (final List<TaskOptions> piece : partitioned) {
+			if (log.isDebugEnabled())
+				log.debug("Queue '" + queue.getQueueName() + "' adding " + piece.size() + " tasks");
+
 			queue().add(null, piece);
+		}
 	}
 
 	public Queue queue() {
