@@ -35,4 +35,15 @@ public class Queues
 
 		byQueue.forEach(QueueHelper::add);
 	}
+
+	/**
+	 * Add the tasks to their default queues in the most optimum way possible. Add a delay.
+	 */
+	public static <T extends GuicyDeferredTask> void add(final Collection<T> tasks, final long countdownMillis) {
+		log.debug("Enqueueing {} tasks with delay {}", tasks.size(), countdownMillis);
+
+		final Map<QueueHelper, List<T>> byQueue = tasks.stream().collect(Collectors.groupingBy(GuicyDeferredTask::defaultQueue));
+
+		byQueue.forEach((queue, list) -> queue.withCountdownMillis(countdownMillis).add(list));
+	}
 }
