@@ -7,19 +7,24 @@ import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueConstants;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.RetryOptions;
+import com.google.appengine.api.taskqueue.TaskHandle;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.api.taskqueue.TaskOptions.Builder;
+import com.google.appengine.api.taskqueue.TaskOptions.Method;
 import com.google.appengine.api.taskqueue.TransientFailureException;
 import com.google.common.collect.Iterables;
 import com.voodoodyne.gstrap.lang.Strings2;
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /** Better interface to queues */
-@Data
+@RequiredArgsConstructor
 @Slf4j
 public class QueueHelper {
 
@@ -33,6 +38,9 @@ public class QueueHelper {
 	/** If not null, limit retries. In theory, 0 means "try once" but need to verify. */
 	private final Integer retryLimit;
 
+	/** Is this a pull queue? */
+	private final boolean pull;
+
 	/** */
 	public QueueHelper(final String name) {
 		this(QueueFactory.getQueue(name));
@@ -40,24 +48,17 @@ public class QueueHelper {
 
 	/** */
 	public QueueHelper(final Queue queue) {
-		this(queue, null, null);
-	}
-
-	/** */
-	private QueueHelper(final Queue queue, final Long countdownMillis, final Integer retryLimit) {
-		this.queue = queue;
-		this.countdownMillis = countdownMillis;
-		this.retryLimit = retryLimit;
+		this(queue, null, null, false);
 	}
 
 	/** @return a new immutable QueueHelper with the countdown */
 	public QueueHelper withCountdownMillis(final long countdownMillis) {
-		return new QueueHelper(queue, countdownMillis, retryLimit);
+		return new QueueHelper(queue, countdownMillis, retryLimit, pull);
 	}
 
 	/** @return a new immutable QueueHelper with the limit */
 	public QueueHelper withRetryLimit(final int retryLimit) {
-		return new QueueHelper(queue, countdownMillis, retryLimit);
+		return new QueueHelper(queue, countdownMillis, retryLimit, pull);
 	}
 
 	/** WITHOUT a transaction */
@@ -72,7 +73,13 @@ public class QueueHelper {
 	}
 
 	private TaskOptions makeOptions(final Transaction txn, final DeferredTask payload) {
-		TaskOptions taskOptions = Builder.withPayload(payload);
+		TaskOptions taskOptions = Builder.withDefaults();
+
+		if (pull) {
+			taskOptions = taskOptions.method(Method.PULL);
+		}
+
+		taskOptions = taskOptions.payload(payload);
 
 		if (txn == null) {
 			taskOptions = taskOptions.taskName(nameOf(payload));
@@ -140,6 +147,16 @@ public class QueueHelper {
 				.add("queue", queue.getQueueName())
 				.add("countdownMillis", countdownMillis)
 				.add("retryLimit", retryLimit)
+				.add("pull", pull)
 				.toString();
+	}
+
+	public Optional<TaskHandle> lease1(final Duration duration) {
+		final List<TaskHandle> tasks = lease(1, duration);
+		return tasks.stream().findFirst();
+	}
+
+	public List<TaskHandle> lease(final int count, final Duration duration) {
+		return queue.leaseTasks(count, TimeUnit.SECONDS, duration.getSeconds());
 	}
 }
