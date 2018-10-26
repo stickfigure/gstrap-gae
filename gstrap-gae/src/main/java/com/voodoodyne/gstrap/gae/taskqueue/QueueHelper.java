@@ -61,6 +61,10 @@ public class QueueHelper {
 		return new QueueHelper(queue, countdownMillis, retryLimit, pull);
 	}
 
+	public QueueHelper pull() {
+		return new QueueHelper(queue, countdownMillis, retryLimit, true);
+	}
+
 	/** WITHOUT a transaction */
 	public void add(final DeferredTask payload) {
 		this.add(null, payload);
@@ -157,6 +161,6 @@ public class QueueHelper {
 	}
 
 	public List<TaskHandle> lease(final int count, final Duration duration) {
-		return queue.leaseTasks(count, TimeUnit.SECONDS, duration.getSeconds());
+		return queue.leaseTasks(duration.getSeconds(), TimeUnit.SECONDS, count);
 	}
 }
