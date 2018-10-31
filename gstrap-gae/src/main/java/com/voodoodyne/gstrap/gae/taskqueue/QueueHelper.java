@@ -14,6 +14,7 @@ import com.google.appengine.api.taskqueue.TaskOptions.Method;
 import com.google.appengine.api.taskqueue.TransientFailureException;
 import com.google.common.collect.Iterables;
 import com.voodoodyne.gstrap.lang.Strings2;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 /** Better interface to queues */
 @RequiredArgsConstructor
+@EqualsAndHashCode
 @Slf4j
 public class QueueHelper {
 
