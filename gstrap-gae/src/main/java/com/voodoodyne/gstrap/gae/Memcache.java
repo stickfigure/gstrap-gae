@@ -184,4 +184,9 @@ public class Memcache<K, V> {
 	public Long increment(K key, long delta) {
 		return this.memCache.increment(key, delta);
 	}
+
+	/** */
+	public Long increment(K key, long delta, long initialValue) {
+		return this.memCache.increment(key, delta, initialValue);
+	}
 }
