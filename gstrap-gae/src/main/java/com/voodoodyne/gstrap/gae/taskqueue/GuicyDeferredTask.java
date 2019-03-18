@@ -44,4 +44,11 @@ abstract public class GuicyDeferredTask implements DeferredTask
 	public void add() {
 		defaultQueue().add(this);
 	}
+
+	/**
+	 * Convenience method
+	 */
+	public void add(final long countdownMillis) {
+		defaultQueue().withCountdownMillis(countdownMillis).add(this);
+	}
 }
