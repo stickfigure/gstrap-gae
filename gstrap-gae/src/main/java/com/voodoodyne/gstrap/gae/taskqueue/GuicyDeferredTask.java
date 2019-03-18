@@ -25,8 +25,8 @@ abstract public class GuicyDeferredTask implements DeferredTask
 			log.debug("Running task " + this);
 	    	injector.injectMembers(this);
 	    	this.run2();
-		} catch (RuntimeException ex) {
-			log.error("Error running task " + this, ex);
+		} catch (final RuntimeException ex) {
+			log.error("Error running task " + this);
 			throw ex;
 		}
 	}
