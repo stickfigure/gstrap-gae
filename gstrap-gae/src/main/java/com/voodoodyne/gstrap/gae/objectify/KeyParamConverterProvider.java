@@ -1,7 +1,6 @@
 package com.voodoodyne.gstrap.gae.objectify;
 
 import com.googlecode.objectify.Key;
-import lombok.RequiredArgsConstructor;
 
 import javax.inject.Inject;
 import javax.ws.rs.ext.ParamConverter;
@@ -17,10 +16,14 @@ import java.lang.reflect.Type;
  * To use this, bind a KeyStringer instance and register this class with Guice.
  */
 @Provider
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class KeyParamConverterProvider implements ParamConverterProvider {
 
 	private final KeyStringer keyStringer;
+
+	@Inject
+	public KeyParamConverterProvider(final KeyStringer keyStringer) {
+		this.keyStringer = keyStringer;
+	}
 
 	@Override
 	public <T> ParamConverter<T> getConverter(final Class<T> aClass, final Type type, final Annotation[] annotations) {
