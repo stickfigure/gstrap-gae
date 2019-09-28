@@ -7,16 +7,24 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Inject;
 
 /**
- * Life is slightly easier when tasks have a default queue
+ * Life is slightly easier when tasks have a default queue and log themselves before starting.
  */
 @Slf4j
 abstract public class Task implements DeferredTask
 {
 	private static final long serialVersionUID = -9079779277109762232L;
 
+	@Override
+	public final void run() {
+		log.debug("Running task {}", this);
+		this.run2();
+	}
+	
+	/** Implement this instead of run() */
+	abstract protected void run2();
+
 	/**
-	 * If you just call Queues.add(), this will be the queue used. You can of course
-	 * explicitly add tasks to any queue.
+	 * The queue chosen if you call add() on this task.
 	 */
 	abstract public QueueHelper defaultQueue();
 
