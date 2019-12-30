@@ -4,8 +4,7 @@ import com.google.appengine.api.taskqueue.dev.LocalTaskQueue;
 import com.google.appengine.api.taskqueue.dev.QueueStateInfo;
 import com.google.appengine.api.taskqueue.dev.QueueStateInfo.TaskStateInfo;
 import com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest;
-import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
-import com.google.appengine.tools.development.testing.LocalSearchServiceTestConfig;
+import com.google.appengine.tools.development.testing.LocalServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.appengine.tools.development.testing.LocalTaskQueueTestConfig;
 import com.google.appengine.tools.development.testing.LocalTaskQueueTestConfig.DeferredTaskCallback;
@@ -66,14 +65,20 @@ public class GAEHelper {
 
 	/** */
 	public GAEHelper(final String queueXmlPath) {
-		helper =
-				new LocalServiceTestHelper(
-						new LocalDatastoreServiceTestConfig().setApplyAllHighRepJobPolicy(),
-						new LocalTaskQueueTestConfig()
-								.setQueueXmlPath(queueXmlPath)
-								.setDisableAutoTaskExecution(true)
-								.setCallbackClass(LoggingDeferredTaskCallback.class),
-						new LocalSearchServiceTestConfig());
+		final LocalTaskQueueTestConfig queueConfig = new LocalTaskQueueTestConfig()
+				.setQueueXmlPath(queueXmlPath)
+				.setDisableAutoTaskExecution(true)
+				.setCallbackClass(LoggingDeferredTaskCallback.class);
+
+		helper = new LocalServiceTestHelper(configs(queueConfig));
+	}
+
+	/**
+	 * All services, eg {@code new LocalDatastoreServiceTestConfig().setApplyAllHighRepJobPolicy()}. Subclass and add the
+	 * provided task queue config to your configs if appropriate.
+	 */
+	protected LocalServiceTestConfig[] configs(LocalTaskQueueTestConfig taskQueueConfig) {
+		return new LocalServiceTestConfig[] {taskQueueConfig};
 	}
 
 	/** */
