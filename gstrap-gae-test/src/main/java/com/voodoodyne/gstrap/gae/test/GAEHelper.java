@@ -28,7 +28,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class GAEHelper {
 	/** */
-	private static final int MAX_TASK_RETRIES = 3;
+	private static final int MAX_TASK_RETRIES = 1;
 
 	/**
 	 * In order to use Guice in tasks, we need to extend the deferred task callback and manage the
@@ -105,14 +105,14 @@ public class GAEHelper {
 	 */
 	@SneakyThrows
 	public static void awaitTasks(final Requestor requestor) {
+		//noinspection MismatchedQueryAndUpdateOfCollection
+		final Accumulator<String, Counter> taskCounts = new Accumulator<>(Counter::new);
+
 		boolean stop = false;
 		while (!stop) {
 			stop = true;
 
 			final LocalTaskQueue ltq = LocalTaskQueueTestConfig.getLocalTaskQueue();
-
-			//noinspection MismatchedQueryAndUpdateOfCollection
-			final Accumulator<String, Counter> taskCounts = new Accumulator<>(Counter::new);
 
 			for (final Map.Entry<String, QueueStateInfo> queueEntry: ltq.getQueueStateInfo().entrySet()) {
 				// copy just in case this changes underneath us
