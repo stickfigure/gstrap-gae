@@ -16,7 +16,13 @@ abstract public class Task implements DeferredTask
 
 	@Override
 	public final void run() {
+		final TaskContext context = TaskContext.current();
+
 		log.debug("Running task {}", this);
+		log.debug("QueueName {}", context.getQueueName());
+		log.debug("TaskName {}", context.getTaskName());
+		log.debug("RetryCount {}", context.getRetryCount());
+
 		this.run2();
 	}
 	
