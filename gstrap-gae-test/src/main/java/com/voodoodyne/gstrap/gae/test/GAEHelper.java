@@ -1,24 +1,11 @@
 package com.voodoodyne.gstrap.gae.test;
 
-import com.google.appengine.api.taskqueue.dev.LocalTaskQueue;
-import com.google.appengine.api.taskqueue.dev.QueueStateInfo;
-import com.google.appengine.api.taskqueue.dev.QueueStateInfo.TaskStateInfo;
-import com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest;
 import com.google.appengine.tools.development.testing.LocalServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.appengine.tools.development.testing.LocalTaskQueueTestConfig;
-import com.google.appengine.tools.development.testing.LocalTaskQueueTestConfig.DeferredTaskCallback;
-import com.google.common.collect.Lists;
-import com.voodoodyne.gstrap.test.Requestor;
-import com.voodoodyne.gstrap.util.Accumulator;
-import com.voodoodyne.gstrap.util.Counter;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.TestInfo;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -28,61 +15,23 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class GAEHelper {
 	/** */
-	private static final int MAX_TASK_RETRIES = 1;
-
-	/**
-	 * In order to use Guice in tasks, we need to extend the deferred task callback and manage the
-	 * request scope.  Also forces tasks to execute in serial.
-	 */
-	public static class LoggingDeferredTaskCallback extends DeferredTaskCallback {
-		private static final long serialVersionUID = -3346119326008280305L;
-
-		@Override
-		public synchronized int execute(URLFetchRequest req) {
-			String taskName = extractTaskName(req);
-
-			log.info("Executing task " + taskName);
-			try {
-				return super.execute(req);
-			} catch (RuntimeException ex) {
-				log.error("Error executing " + taskName, ex);
-				throw ex;
-			}
-		}
-
-		private String extractTaskName(URLFetchRequest req) {
-			return req.toString().replaceAll("(?s).*Payload: .*%", "").replaceAll("(?s)\\\\.*", "");
-		}
-	}
-
-	/** */
 	private final LocalServiceTestHelper helper;
 
-	/** Assumes standard maven location of queue.xml */
-	public GAEHelper() {
-		this("src/main/webapp/WEB-INF/queue.xml");
-	}
-
 	/** */
-	public GAEHelper(final String queueXmlPath) {
-		final LocalTaskQueueTestConfig queueConfig = new LocalTaskQueueTestConfig()
-				.setQueueXmlPath(queueXmlPath)
-				.setDisableAutoTaskExecution(true)
-				.setCallbackClass(LoggingDeferredTaskCallback.class);
-
-		helper = new LocalServiceTestHelper(configs(queueConfig));
+	public GAEHelper() {
+		helper = new LocalServiceTestHelper(configs());
 	}
 
 	/**
 	 * All services, eg {@code new LocalDatastoreServiceTestConfig().setApplyAllHighRepJobPolicy()}. Subclass and add the
 	 * provided task queue config to your configs if appropriate.
 	 */
-	protected LocalServiceTestConfig[] configs(LocalTaskQueueTestConfig taskQueueConfig) {
-		return new LocalServiceTestConfig[] {taskQueueConfig};
+	protected LocalServiceTestConfig[] configs() {
+		return new LocalServiceTestConfig[0];
 	}
 
 	/** */
-	public void setUp(TestInfo testInfo) {
+	public void setUp(final TestInfo testInfo) {
 		// Set a unique appId so datastore keys don't conflict...
 		final String appId = testInfo.getTestClass().get().getSimpleName()
 				+ "-" + testInfo.getTestMethod().get().getName()
@@ -95,38 +44,5 @@ public class GAEHelper {
 	/** */
 	public void tearDown() {
 		helper.tearDown();
-	}
-
-	/**
-	 * Use internal APIs in the local task queue to process all tasks... and keep processing them
-	 * becuse tasks can enqueue other tasks. Only stop when there is nothing left.
-	 *
-	 * This relies on the thread local stuff set up by the helper.
-	 */
-	@SneakyThrows
-	public static void awaitTasks(final Requestor requestor) {
-		//noinspection MismatchedQueryAndUpdateOfCollection
-		final Accumulator<String, Counter> taskCounts = new Accumulator<>(Counter::new);
-
-		boolean stop = false;
-		while (!stop) {
-			stop = true;
-
-			final LocalTaskQueue ltq = LocalTaskQueueTestConfig.getLocalTaskQueue();
-
-			for (final Map.Entry<String, QueueStateInfo> queueEntry: ltq.getQueueStateInfo().entrySet()) {
-				// copy just in case this changes underneath us
-				List<TaskStateInfo> tasks = Lists.newArrayList(queueEntry.getValue().getTaskInfo());
-
-				for (final TaskStateInfo task: tasks) {
-					final Counter counter = taskCounts.get(task.getTaskName());
-					if (++counter.count > MAX_TASK_RETRIES)
-						throw new RuntimeException("Too many task retries for " + task);
-
-					requestor.req(() -> ltq.runTask(queueEntry.getKey(), task.getTaskName()));
-					stop = false;
-				}
-			}
-		}
 	}
 }
