@@ -36,11 +36,6 @@
 			<artifactId>appengine-testing</artifactId>
 			<version>${gae.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>com.google.appengine</groupId>
-			<artifactId>appengine-api-stubs</artifactId>
-			<version>${gae.version}</version>
-		</dependency>
 
 		<!-- Needed to make the task queue work -->
 		<dependency>
